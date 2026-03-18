@@ -79,6 +79,7 @@ else:
         libraries=["fftw3"],
         include_dirs=include_dirs,
         library_dirs=library_dirs,
+        extra_compile_args=["-fPIC"],
         extra_link_args=["-Wl,--no-as-needed"],
     )
 
