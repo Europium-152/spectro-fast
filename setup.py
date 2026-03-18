@@ -1,31 +1,21 @@
 import sys
 import os
-from setuptools import setup
-from setuptools.command.build_ext import build_ext
 
+# On Linux/Mac, monkey-patch the linker to filter out .def files.
+# cffi generates .abi3.def export files that only work on Windows (MinGW).
+# On Linux, gcc treats them as linker scripts and fails.
+if sys.platform != "win32":
+    from distutils.unixccompiler import UnixCCompiler
+    _original_link = UnixCCompiler.link
 
-class BuildExtNoDef(build_ext):
-    """Custom build_ext that removes .def files from the link step on Linux/Mac.
+    def _patched_link(self, target_desc, objects, *args, **kwargs):
+        objects = [o for o in objects if not o.endswith(".def")]
+        return _original_link(self, target_desc, objects, *args, **kwargs)
 
-    cffi generates .abi3.def export files which are only valid on Windows (MinGW).
-    On Linux, gcc treats them as linker scripts and fails.
-    """
-    def build_extension(self, ext):
-        # Save original link method
-        original_link = self.compiler.link_shared_object
+    UnixCCompiler.link = _patched_link
 
-        def patched_link(objects, *args, **kwargs):
-            # Filter out .def files on non-Windows
-            if sys.platform != "win32":
-                objects = [o for o in objects if not o.endswith(".def")]
-            return original_link(objects, *args, **kwargs)
-
-        self.compiler.link_shared_object = patched_link
-        super().build_extension(ext)
-        self.compiler.link_shared_object = original_link
-
-
-if sys.platform == "win32":
+else:
+    # Force MinGW compiler on Windows
     os.environ.setdefault("CC", "gcc")
     if "build_ext" not in sys.argv:
         sys.argv.insert(1, "build_ext")
@@ -36,7 +26,8 @@ if sys.platform == "win32":
         if isinstance(cfg[key], str) and '/MD' in cfg[key]:
             cfg[key] = cfg[key].replace('/MD', '')
 
+from setuptools import setup
+
 setup(
     cffi_modules=["spectrofast/_fft_build.py:ffibuilder"],
-    cmdclass={"build_ext": BuildExtNoDef},
 )
