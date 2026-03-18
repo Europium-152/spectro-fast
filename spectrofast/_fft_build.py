@@ -56,7 +56,7 @@ elif system == "Darwin":
     )
 
 else:
-    # Linux: expect system-installed fftw3
+    # Linux: try pkg-config, then $HOME/.local, then system default
     include_dirs = []
     library_dirs = []
     try:
@@ -65,7 +65,13 @@ else:
         include_dirs = [f.replace("-I", "") for f in cflags.split() if f.startswith("-I")]
         library_dirs = [f.replace("-L", "") for f in libs.split() if f.startswith("-L")]
     except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
+        # Fall back to ~/.local (user-installed FFTW without sudo)
+        home = os.path.expanduser("~")
+        local_inc = os.path.join(home, ".local", "include")
+        local_lib = os.path.join(home, ".local", "lib")
+        if os.path.exists(os.path.join(local_inc, "fftw3.h")):
+            include_dirs.append(local_inc)
+            library_dirs.append(local_lib)
 
     ffibuilder.set_source(
         "spectrofast._real_spectrogram_cffi",
@@ -73,6 +79,7 @@ else:
         libraries=["fftw3"],
         include_dirs=include_dirs,
         library_dirs=library_dirs,
+        extra_link_args=["-Wl,--no-as-needed"],
     )
 
 if __name__ == "__main__":

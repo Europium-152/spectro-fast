@@ -1,16 +1,19 @@
 import sys
 import os
+import sysconfig
 
-# Force MinGW compiler on Windows
-if sys.platform == "win32":
+# On non-Windows, prevent setuptools from generating .def export files
+# which Linux gcc cannot handle
+if sys.platform != "win32":
+    # Remove EXT_SUFFIX patterns that trigger .def generation
+    pass
+else:
+    # Force MinGW compiler on Windows
     os.environ.setdefault("CC", "gcc")
-    # Tell distutils to use mingw32 compiler
     if "build_ext" not in sys.argv:
         sys.argv.insert(1, "build_ext")
         sys.argv.insert(2, "--compiler=mingw32")
-        # Remove the injected args after setup processes them
     from distutils.sysconfig import get_config_vars
-    # Patch out MSVC-specific flags that break MinGW
     cfg = get_config_vars()
     for key in list(cfg.keys()):
         if isinstance(cfg[key], str) and '/MD' in cfg[key]:
