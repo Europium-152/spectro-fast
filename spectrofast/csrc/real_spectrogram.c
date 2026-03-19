@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <complex.h>
 #include <fftw3.h>
 #include <math.h>
 #include <string.h>
@@ -79,8 +78,8 @@ int many_real_spectrograms(double *signal, int signal_length, int number_of_sign
 
         // Compute magnitude squared
         for (int j = 0; j < (output_size * num_windows); j++) {
-            double re = creal(out[j]);
-            double im = cimag(out[j]);
+            double re = out[j][0];
+            double im = out[j][1];
             spectrogram[k * (output_size * num_windows) + j] = re * re + im * im;
         }
     }
@@ -136,8 +135,8 @@ int many_real_spectrograms_padded(double *signal, int signal_length, int number_
 
             int offset = k * (num_windows * output_size) + w * output_size;
             for (int j = 0; j < output_size; j++) {
-                double re = creal(out[j]);
-                double im = cimag(out[j]);
+                double re = out[j][0];
+                double im = out[j][1];
                 spectrogram[offset + j] = re * re + im * im;
             }
         }
