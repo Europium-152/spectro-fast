@@ -17,48 +17,7 @@ def get_number_of_windows(signal_length, window_size, overlap):
     return lib.get_number_of_windows(signal_length, window_size, overlap)
 
 
-def many_spectrograms(signal, signal_length, number_of_signals, window_size, overlap):
-    """
-    Compute spectrograms of multiple signals using batched FFTW.
-
-    Parameters
-    ----------
-    signal : np.ndarray
-        Flattened 1D float64 array containing all signals concatenated.
-    signal_length : int
-        Length of each individual signal.
-    number_of_signals : int
-        Number of signals.
-    window_size : int
-        Window size for the FFT.
-    overlap : int
-        Overlap between consecutive windows.
-
-    Returns
-    -------
-    np.ndarray
-        Flattened 1D array of magnitude-squared spectrogram values.
-    """
-    signal = np.ascontiguousarray(signal, dtype=np.float64)
-    num_windows = get_number_of_windows(signal_length, window_size, overlap)
-    output_size = window_size // 2 + 1
-    spectrogram_size = number_of_signals * num_windows * output_size
-
-    spectrogram = np.empty(spectrogram_size, dtype=np.float64)
-
-    signal_ptr = ffi.cast("double *", signal.ctypes.data)
-    spec_ptr = ffi.cast("double *", spectrogram.ctypes.data)
-
-    ret = lib.many_real_spectrograms(signal_ptr, signal_length,
-                                     number_of_signals, window_size,
-                                     overlap, spec_ptr)
-    if ret != 0:
-        raise RuntimeError(f"many_real_spectrograms failed with error code {ret}")
-
-    return spectrogram
-
-
-def many_spectrograms_padded(signal, signal_length, number_of_signals,
+def many_real_spectrograms(signal, signal_length, number_of_signals,
                               window_size, overlap, fft_size):
     """
     Compute zero-padded spectrograms of multiple signals.
@@ -93,11 +52,11 @@ def many_spectrograms_padded(signal, signal_length, number_of_signals,
     signal_ptr = ffi.cast("double *", signal.ctypes.data)
     spec_ptr = ffi.cast("double *", spectrogram.ctypes.data)
 
-    ret = lib.many_real_spectrograms_padded(signal_ptr, signal_length,
-                                            number_of_signals, window_size,
-                                            overlap, fft_size, spec_ptr)
+    ret = lib.many_real_spectrograms(signal_ptr, signal_length,
+                                    number_of_signals, window_size,
+                                    overlap, fft_size, spec_ptr)
     if ret != 0:
-        raise RuntimeError(f"many_real_spectrograms_padded failed with error code {ret}")
+        raise RuntimeError(f"many_real_spectrograms failed with error code {ret}")
 
     return spectrogram
 
@@ -207,7 +166,7 @@ def complex_spectrogram(x, nperseg, noverlap, nfft=None):
         return result.reshape(number_of_signals, num_windows, output_size)
 
 
-def spectrogram(x, nperseg, noverlap, nfft=None):
+def real_spectrogram(x, nperseg, noverlap, nfft=None):
     """
     Compute the spectrogram of one or more signals.
 
@@ -258,12 +217,10 @@ def spectrogram(x, nperseg, noverlap, nfft=None):
     num_windows = get_number_of_windows(signal_length, nperseg, noverlap)
     output_size = nfft // 2 + 1
 
-    if nfft == nperseg:
-        result = many_spectrograms(x, signal_length, number_of_signals,
-                                   nperseg, noverlap)
-    else:
-        result = many_spectrograms_padded(x, signal_length, number_of_signals,
-                                          nperseg, noverlap, nfft)
+
+    result = many_real_spectrograms(x, signal_length, number_of_signals,
+                                   nperseg, noverlap, nfft)
+
 
     if number_of_signals == 1:
         return result.reshape(num_windows, output_size)

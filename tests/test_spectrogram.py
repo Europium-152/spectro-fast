@@ -1,10 +1,10 @@
 import numpy as np
-from spectrofast import spectrogram, complex_spectrogram, get_number_of_windows
+from spectrofast import real_spectrogram, complex_spectrogram, get_number_of_windows
 
 
 def test_output_shape_1d():
     signal = np.sin(2 * np.pi * np.arange(1024) / 32).astype(np.float64)
-    result = spectrogram(signal, nperseg=256, noverlap=128)
+    result = real_spectrogram(signal, nperseg=256, noverlap=128)
     num_windows = get_number_of_windows(1024, 256, 128)
     output_size = 256 // 2 + 1
     assert result.shape == (num_windows, output_size)
@@ -12,7 +12,7 @@ def test_output_shape_1d():
 
 def test_output_shape_2d():
     signals = np.random.randn(10, 1024).astype(np.float64)
-    result = spectrogram(signals, nperseg=256, noverlap=128)
+    result = real_spectrogram(signals, nperseg=256, noverlap=128)
     num_windows = get_number_of_windows(1024, 256, 128)
     output_size = 256 // 2 + 1
     assert result.shape == (10, num_windows, output_size)
@@ -20,7 +20,7 @@ def test_output_shape_2d():
 
 def test_zero_padding_shape():
     signal = np.sin(2 * np.pi * np.arange(1024) / 32).astype(np.float64)
-    result = spectrogram(signal, nperseg=256, noverlap=128, nfft=512)
+    result = real_spectrogram(signal, nperseg=256, noverlap=128, nfft=512)
     num_windows = get_number_of_windows(1024, 256, 128)
     output_size = 512 // 2 + 1
     assert result.shape == (num_windows, output_size)
@@ -33,7 +33,7 @@ def test_peak_frequency():
     t = np.arange(1024) / fs
     signal = np.sin(2 * np.pi * freq * t).astype(np.float64)
 
-    result = spectrogram(signal, nperseg=256, noverlap=0)
+    result = real_spectrogram(signal, nperseg=256, noverlap=0)
 
     # For each window, find the peak frequency bin (excluding DC)
     for w in range(result.shape[0]):
@@ -45,7 +45,7 @@ def test_peak_frequency():
 def test_non_negative():
     """Magnitude squared values should always be non-negative."""
     signal = np.random.randn(2048).astype(np.float64)
-    result = spectrogram(signal, nperseg=256, noverlap=128)
+    result = real_spectrogram(signal, nperseg=256, noverlap=128)
     assert np.all(result >= 0)
 
 

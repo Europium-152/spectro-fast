@@ -35,64 +35,7 @@ int get_number_of_windows(int signal_length, int window_size, int overlap) {
 
 
 int many_real_spectrograms(double *signal, int signal_length, int number_of_signals,
-                           int window_size, int overlap, double *spectrogram) {
-
-    init_wisdom_path();
-    fftw_import_wisdom_from_filename(wisdom_path);
-
-    int input_size = window_size;
-    int output_size = window_size / 2 + 1;
-    int num_windows = get_number_of_windows(signal_length, window_size, overlap);
-
-    // Allocate FFTW-aligned input and output buffers
-    double *in = (double*) fftw_malloc(sizeof(double) * (size_t)signal_length);
-    fftw_complex *out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * (size_t)output_size * (size_t)num_windows);
-
-    if (in == NULL || out == NULL) {
-        if (in) fftw_free(in);
-        if (out) fftw_free(out);
-        return -1;
-    }
-
-    // Create batched plan
-    fftw_plan p = fftw_plan_many_dft_r2c(1, &input_size, num_windows,
-                                          in, NULL,
-                                          1, window_size - overlap,
-                                          out, NULL,
-                                          1, output_size,
-                                          FFTW_MEASURE);
-
-    if (p == NULL) {
-        fftw_free(in); fftw_free(out);
-        return -1;
-    }
-
-    fftw_export_wisdom_to_filename(wisdom_path);
-
-    // Process each signal
-    for (int k = 0; k < number_of_signals; k++) {
-        double *current_signal = &signal[k * signal_length];
-
-        memcpy(in, current_signal, signal_length * sizeof(double));
-        fftw_execute(p);
-
-        // Compute magnitude squared
-        for (int j = 0; j < (output_size * num_windows); j++) {
-            double re = out[j][0];
-            double im = out[j][1];
-            spectrogram[k * (output_size * num_windows) + j] = re * re + im * im;
-        }
-    }
-
-    fftw_destroy_plan(p);
-    fftw_free(in); fftw_free(out);
-
-    return 0;
-}
-
-
-int many_real_spectrograms_padded(double *signal, int signal_length, int number_of_signals,
-                                   int window_size, int overlap, int fft_size, double *spectrogram) {
+                            int window_size, int overlap, int fft_size, double *spectrogram) {
 
     init_wisdom_path();
     fftw_import_wisdom_from_filename(wisdom_path);

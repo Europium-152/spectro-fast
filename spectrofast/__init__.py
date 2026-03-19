@@ -2,20 +2,18 @@
 
 from spectrofast._spectrogram import (
     get_number_of_windows,
-    many_spectrograms,
-    many_spectrograms_padded,
+    many_real_spectrograms,
     many_complex_spectrograms,
     complex_spectrogram,
-    spectrogram,
+    real_spectrogram,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "get_number_of_windows",
-    "many_spectrograms",
-    "many_spectrograms_padded",
+    "many_real_spectrograms",
     "many_complex_spectrograms",
     "complex_spectrogram",
-    "spectrogram",
+    "real_spectrogram",
 ]
