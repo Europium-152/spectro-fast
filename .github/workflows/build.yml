@@ -112,7 +112,12 @@ jobs:
     steps:
       - uses: actions/download-artifact@v5
         with:
-          path: dist
-          merge-multiple: true
+          path: artifacts
+
+      - name: Collect all dists into one folder
+        run: |
+          mkdir -p dist
+          find artifacts -type f \( -name '*.whl' -o -name '*.tar.gz' \) -exec cp {} dist/ \;
+          ls -lh dist/
 
       - uses: pypa/gh-action-pypi-publish@release/v1
