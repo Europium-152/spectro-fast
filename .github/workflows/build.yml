@@ -13,11 +13,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
-        # macos-13 = x86_64, macos-14 = arm64
+        os: [ubuntu-latest, windows-latest, macos-15, macos-14]
+        # macos-15 = x86_64, macos-14 = arm64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # ── Build FFTW from source (macOS only, on host) ──
       # Linux FFTW is built inside the manylinux container via CIBW_BEFORE_ALL
@@ -83,7 +83,7 @@ jobs:
           CIBW_TEST_REQUIRES: numpy pytest
           CIBW_TEST_COMMAND: pytest {project}/tests/
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
@@ -93,10 +93,10 @@ jobs:
     name: Build sdist
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: pip install build
       - run: python -m build --sdist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: sdist
           path: dist/*.tar.gz
@@ -110,7 +110,7 @@ jobs:
     permissions:
       id-token: write  # for trusted publishing
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: dist
           merge-multiple: true
