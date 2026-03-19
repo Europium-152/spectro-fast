@@ -134,6 +134,9 @@ def spectrogram(x, nperseg, noverlap, nfft=None):
     if nfft is None:
         nfft = nperseg
 
+    if noverlap >= nperseg:
+        raise ValueError(f"noverlap ({noverlap}) must be less than nperseg ({nperseg})")
+
     if nfft < nperseg:
         raise ValueError(f"nfft ({nfft}) must be >= nperseg ({nperseg})")
 

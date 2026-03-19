@@ -16,8 +16,8 @@
 
 
 // Global paths
-static char dir_path[512];
-static char wisdom_path[512];
+static char dir_path[4096];
+static char wisdom_path[4096];
 
 
 static void init_wisdom_path() {
@@ -61,7 +61,7 @@ int many_real_spectrograms(double *signal, int signal_length, int number_of_sign
                                           1, window_size - overlap,
                                           out, NULL,
                                           1, output_size,
-                                          FFTW_ESTIMATE);
+                                          FFTW_MEASURE);
 
     if (p == NULL) {
         fftw_free(in); fftw_free(out);
@@ -116,7 +116,7 @@ int many_real_spectrograms_padded(double *signal, int signal_length, int number_
     memset(in, 0, sizeof(double) * fft_size);
 
     // Plan a single FFT of size fft_size
-    fftw_plan p = fftw_plan_dft_r2c_1d(fft_size, in, out, FFTW_ESTIMATE);
+    fftw_plan p = fftw_plan_dft_r2c_1d(fft_size, in, out, FFTW_MEASURE);
 
     if (p == NULL) {
         fftw_free(in); fftw_free(out);

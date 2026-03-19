@@ -14,8 +14,8 @@ if sys.platform != "win32":
 
     UnixCCompiler.link = _patched_link
 
-else:
-    # Force MinGW compiler on Windows
+elif not os.environ.get("CIBUILDWHEEL"):
+    # Local Windows dev: force MinGW compiler (skip in CI where MSVC is used)
     os.environ.setdefault("CC", "gcc")
     if "build_ext" not in sys.argv:
         sys.argv.insert(1, "build_ext")

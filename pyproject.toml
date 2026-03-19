@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "spectrofast"
 version = "0.1.0"
 description = "Fast FFTW-based spectrogram computation — a drop-in replacement for scipy.signal.spectrogram"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = "GPL-2.0-or-later"
 dependencies = [
     "numpy",
@@ -24,3 +24,6 @@ include = ["spectrofast*"]
     "_vendor_win/*.def",
     "_vendor_win/*.h",
 ]
+
+[tool.cibuildwheel]
+build-frontend = "pip"

@@ -18,14 +18,36 @@ with open(os.path.join(here, "csrc", "real_spectrogram.c")) as f:
 # Platform-specific configuration
 system = platform.system()
 
+# CI builds set FFTW_STATIC_DIR to a directory containing libfftw3.a and fftw3.h
+# This allows us to statically link FFTW into the wheel so users don't need it installed.
+fftw_static_dir = os.environ.get("FFTW_STATIC_DIR")
+
 if system == "Windows":
     vendor_dir = os.path.join(here, "_vendor_win")
+    # Generate import lib from .def for MSVC (CI) or use directly for MinGW (local)
     ffibuilder.set_source(
         "spectrofast._real_spectrogram_cffi",
         c_source,
         libraries=["fftw3-3"],
         library_dirs=[vendor_dir],
         include_dirs=[vendor_dir],
+    )
+
+elif fftw_static_dir:
+    # CI build: statically link FFTW (Linux & macOS)
+    static_lib = os.path.join(fftw_static_dir, "lib", "libfftw3.a")
+    static_inc = os.path.join(fftw_static_dir, "include")
+    extra_compile = ["-fPIC"] if system == "Linux" else []
+    extra_link = [static_lib, "-lm"]
+    if system == "Linux":
+        extra_link.insert(0, "-Wl,--no-as-needed")
+
+    ffibuilder.set_source(
+        "spectrofast._real_spectrogram_cffi",
+        c_source,
+        include_dirs=[static_inc],
+        extra_compile_args=extra_compile,
+        extra_link_args=extra_link,
     )
 
 elif system == "Darwin":
