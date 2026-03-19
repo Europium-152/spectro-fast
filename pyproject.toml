@@ -7,7 +7,7 @@ name = "spectrofast"
 version = "0.1.0"
 description = "Fast FFTW-based spectrogram computation — a drop-in replacement for scipy.signal.spectrogram"
 requires-python = ">=3.9"
-license = "GPL-2.0-or-later"
+license = {text = "GPL-2.0-or-later"}
 readme = "README.md"
 dependencies = [
     "numpy",

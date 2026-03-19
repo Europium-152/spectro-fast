@@ -4,6 +4,8 @@ from spectrofast._spectrogram import (
     get_number_of_windows,
     many_spectrograms,
     many_spectrograms_padded,
+    many_complex_spectrograms,
+    complex_spectrogram,
     spectrogram,
 )
 
@@ -13,5 +15,7 @@ __all__ = [
     "get_number_of_windows",
     "many_spectrograms",
     "many_spectrograms_padded",
+    "many_complex_spectrograms",
+    "complex_spectrogram",
     "spectrogram",
 ]

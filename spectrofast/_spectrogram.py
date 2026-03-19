@@ -102,6 +102,111 @@ def many_spectrograms_padded(signal, signal_length, number_of_signals,
     return spectrogram
 
 
+def many_complex_spectrograms(signal, signal_length, number_of_signals,
+                               window_size, overlap, fft_size):
+    """
+    Compute spectrograms of multiple complex-valued signals.
+
+    Parameters
+    ----------
+    signal : np.ndarray
+        Flattened 1D complex128 array containing all signals concatenated.
+    signal_length : int
+        Length of each individual signal (in complex samples).
+    number_of_signals : int
+        Number of signals.
+    window_size : int
+        Window size (number of complex samples per window).
+    overlap : int
+        Overlap between consecutive windows.
+    fft_size : int
+        FFT size (>= window_size). Zero-padding is applied if fft_size > window_size.
+
+    Returns
+    -------
+    np.ndarray
+        Flattened 1D array of magnitude-squared spectrogram values.
+    """
+    signal = np.ascontiguousarray(signal, dtype=np.complex128)
+    num_windows = get_number_of_windows(signal_length, window_size, overlap)
+    output_size = fft_size  # complex FFT: full spectrum
+    spectrogram_size = number_of_signals * num_windows * output_size
+
+    spectrogram = np.empty(spectrogram_size, dtype=np.float64)
+
+    # complex128 is stored as interleaved double pairs, binary-compatible with fftw_complex
+    signal_ptr = ffi.cast("double *", signal.ctypes.data)
+    spec_ptr = ffi.cast("double *", spectrogram.ctypes.data)
+
+    ret = lib.many_complex_spectrograms(signal_ptr, signal_length,
+                                         number_of_signals, window_size,
+                                         overlap, fft_size, spec_ptr)
+    if ret != 0:
+        raise RuntimeError(f"many_complex_spectrograms failed with error code {ret}")
+
+    return spectrogram
+
+
+def complex_spectrogram(x, nperseg, noverlap, nfft=None):
+    """
+    Compute the spectrogram of one or more complex-valued signals.
+
+    A simple, fast alternative to scipy.signal.spectrogram for complex data,
+    powered by FFTW.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Input complex signal(s). 1D array for a single signal, or 2D array
+        (num_signals, signal_length) for batch processing.
+    nperseg : int
+        Window size (number of samples per segment).
+    noverlap : int
+        Number of overlapping samples between segments.
+    nfft : int, optional
+        FFT size. If larger than nperseg, zero-padding is applied.
+        Defaults to nperseg (no padding).
+
+    Returns
+    -------
+    np.ndarray
+        Magnitude-squared spectrogram.
+        Shape (num_windows, nfft) for 1D input, or
+        (num_signals, num_windows, nfft) for 2D input.
+    """
+    x = np.ascontiguousarray(x, dtype=np.complex128)
+
+    if nfft is None:
+        nfft = nperseg
+
+    if noverlap >= nperseg:
+        raise ValueError(f"noverlap ({noverlap}) must be less than nperseg ({nperseg})")
+
+    if nfft < nperseg:
+        raise ValueError(f"nfft ({nfft}) must be >= nperseg ({nperseg})")
+
+    if x.ndim == 1:
+        number_of_signals = 1
+        signal_length = x.shape[0]
+    elif x.ndim == 2:
+        number_of_signals = x.shape[0]
+        signal_length = x.shape[1]
+        x = x.ravel()
+    else:
+        raise ValueError("Input array must be 1D or 2D.")
+
+    num_windows = get_number_of_windows(signal_length, nperseg, noverlap)
+    output_size = nfft  # complex FFT: full spectrum
+
+    result = many_complex_spectrograms(x, signal_length, number_of_signals,
+                                        nperseg, noverlap, nfft)
+
+    if number_of_signals == 1:
+        return result.reshape(num_windows, output_size)
+    else:
+        return result.reshape(number_of_signals, num_windows, output_size)
+
+
 def spectrogram(x, nperseg, noverlap, nfft=None):
     """
     Compute the spectrogram of one or more signals.

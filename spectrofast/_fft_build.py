@@ -7,13 +7,19 @@ ffibuilder = cffi.FFI()
 
 here = os.path.dirname(os.path.abspath(__file__))
 
-# Read function declarations from the header
+# Read function declarations from both headers
 with open(os.path.join(here, "csrc", "real_spectrogram.h")) as f:
-    ffibuilder.cdef(f.read())
+    cdef_source = f.read()
+with open(os.path.join(here, "csrc", "complex_spectrogram.h")) as f:
+    cdef_source += "\n" + f.read()
+ffibuilder.cdef(cdef_source)
 
-# Read the C source
+# Read and concatenate C sources (complex_spectrogram.c depends on
+# symbols from real_spectrogram.c, so real must come first)
 with open(os.path.join(here, "csrc", "real_spectrogram.c")) as f:
     c_source = f.read()
+with open(os.path.join(here, "csrc", "complex_spectrogram.c")) as f:
+    c_source += "\n" + f.read()
 
 # Platform-specific configuration
 system = platform.system()

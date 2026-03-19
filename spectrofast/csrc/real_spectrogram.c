@@ -14,12 +14,12 @@
 #endif
 
 
-// Global paths
-static char dir_path[4096];
-static char wisdom_path[4096];
+// Global paths (non-static: shared with complex_spectrogram.c via concatenation)
+char dir_path[4096];
+char wisdom_path[4096];
 
 
-static void init_wisdom_path() {
+void init_wisdom_path() {
     const char *home = getenv("USERPROFILE");
     if (!home) home = getenv("HOME");
     if (!home) return;
