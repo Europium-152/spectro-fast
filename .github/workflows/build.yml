@@ -80,8 +80,9 @@ jobs:
           CIBW_BEFORE_BUILD_WINDOWS: pip install delvewheel
 
           # Run tests after building each wheel
-          CIBW_TEST_REQUIRES: numpy pytest
-          CIBW_BEFORE_TEST: pip install scipy || true
+          # Install scipy-openblas32 so scipy can build from source if no wheel exists
+          CIBW_BEFORE_TEST_LINUX: pip install scipy-openblas32
+          CIBW_TEST_REQUIRES: numpy pytest scipy
           CIBW_TEST_COMMAND: pytest {project}/tests/
 
       - uses: actions/upload-artifact@v5
