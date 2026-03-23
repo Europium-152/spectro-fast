@@ -61,6 +61,29 @@ def _resolve_planner_flag(planner):
     raise TypeError(f"planner must be a str or int, got {type(planner).__name__}")
 
 
+def _tukey_periodic(N, alpha):
+    """Periodic Tukey (tapered cosine) window, pure numpy.
+
+    Equivalent to ``scipy.signal.get_window(('tukey', alpha), N, fftbins=True)``.
+    """
+    if alpha <= 0:
+        return np.ones(N, dtype=np.float64)
+    if alpha >= 1:
+        return 0.5 * (1 - np.cos(2 * np.pi * np.arange(N) / N))
+
+    n = np.arange(N, dtype=np.float64)
+    # Width of the taper region (periodic: use N instead of N-1)
+    width = alpha * N / 2.0
+    win = np.ones(N, dtype=np.float64)
+    # Left taper
+    left = n < width
+    win[left] = 0.5 * (1 - np.cos(np.pi * n[left] / width))
+    # Right taper
+    right = n >= (N - width)
+    win[right] = 0.5 * (1 - np.cos(np.pi * (N - n[right]) / width))
+    return win
+
+
 def _resolve_window(window, nperseg):
     """Resolve the window parameter into a numpy array or None.
 
@@ -82,6 +105,12 @@ def _resolve_window(window, nperseg):
 
     if isinstance(window, str) and window.lower() == 'boxcar':
         return None
+
+    # Default Tukey window — pure numpy, no scipy needed
+    if isinstance(window, tuple) and len(window) == 2:
+        name, param = window
+        if isinstance(name, str) and name.lower() == 'tukey':
+            return _tukey_periodic(nperseg, param)
 
     if isinstance(window, (str, tuple, float)):
         try:

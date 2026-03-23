@@ -79,9 +79,8 @@ jobs:
           # Install delvewheel on Windows before building
           CIBW_BEFORE_BUILD_WINDOWS: pip install delvewheel
 
-          # Run tests after building each wheel
-          # Install scipy-openblas32 so scipy can build from source if no wheel exists
-          CIBW_BEFORE_TEST_LINUX: pip install scipy-openblas32
+          # Run tests after building each wheel (skip Linux — scipy has no manylinux wheel)
+          CIBW_TEST_SKIP: "*-manylinux*"
           CIBW_TEST_REQUIRES: numpy pytest scipy
           CIBW_TEST_COMMAND: pytest {project}/tests/
 
