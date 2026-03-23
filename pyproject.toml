@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spectrofast"
-version = "0.2.0"
+version = "0.3.2"
 description = "Fast FFTW-based spectrogram computation — a drop-in replacement for scipy.signal.spectrogram"
 requires-python = ">=3.9"
 license = {text = "GPL-2.0-or-later"}
