@@ -28,6 +28,14 @@ system = platform.system()
 # This allows us to statically link FFTW into the wheel so users don't need it installed.
 fftw_static_dir = os.environ.get("FFTW_STATIC_DIR")
 
+# Optimization flags: MSVC uses /O2, gcc/clang use -O3
+if system == "Windows" and os.environ.get("CIBUILDWHEEL"):
+    # CI uses MSVC
+    opt_flags = ["/O2"]
+else:
+    # Local Windows (MinGW), Linux, macOS all use gcc/clang
+    opt_flags = ["-O3"]
+
 if system == "Windows":
     vendor_dir = os.path.join(here, "_vendor_win")
     # Generate import lib from .def for MSVC (CI) or use directly for MinGW (local)
@@ -37,13 +45,14 @@ if system == "Windows":
         libraries=["fftw3-3"],
         library_dirs=[vendor_dir],
         include_dirs=[vendor_dir],
+        extra_compile_args=opt_flags,
     )
 
 elif fftw_static_dir:
     # CI build: statically link FFTW (Linux & macOS)
     static_lib = os.path.join(fftw_static_dir, "lib", "libfftw3.a")
     static_inc = os.path.join(fftw_static_dir, "include")
-    extra_compile = ["-fPIC"] if system == "Linux" else []
+    extra_compile = opt_flags + (["-fPIC"] if system == "Linux" else [])
     extra_link = [static_lib, "-lm"]
     if system == "Linux":
         extra_link.insert(0, "-Wl,--no-as-needed")
@@ -81,6 +90,7 @@ elif system == "Darwin":
         libraries=["fftw3"],
         include_dirs=include_dirs,
         library_dirs=library_dirs,
+        extra_compile_args=opt_flags,
     )
 
 else:
@@ -107,7 +117,7 @@ else:
         libraries=["fftw3"],
         include_dirs=include_dirs,
         library_dirs=library_dirs,
-        extra_compile_args=["-fPIC"],
+        extra_compile_args=opt_flags + ["-fPIC"],
         extra_link_args=["-Wl,--no-as-needed"],
     )
 
