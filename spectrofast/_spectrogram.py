@@ -364,7 +364,7 @@ def spectrogram(x, fs=1.0, window=('tukey', 0.25), nperseg=256,
         raise ValueError("Input array must have at least 1 dimension.")
 
     # Normalize axis
-    axis_norm = np.lib.array_utils.normalize_axis_index(axis, x.ndim)
+    axis_norm = normalize_axis_index(axis, x.ndim)
 
     # Move target axis to last position
     x = np.moveaxis(x, axis_norm, -1)
