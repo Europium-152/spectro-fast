@@ -1,6 +1,10 @@
 import os
 import sys
 import numpy as np
+try:
+    from numpy.lib.array_utils import normalize_axis_index as normalize_axis_index
+except ImportError:
+    from numpy.core.multiarray import normalize_axis_index as normalize_axis_index
 
 try:
     import numba
